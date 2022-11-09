@@ -37,7 +37,7 @@ class Color(SimpleDictProtocol):
         return {'r': self.r, 'g': self.g, 'b': self.b, 'a': self.a}
 
     def __eq__(self, o: object) -> bool:
-        assert(isinstance(o, Color))
+        assert (isinstance(o, Color))
 
         equiv = [
             self.r == o.r,
@@ -162,7 +162,7 @@ class Area(Versioned, SimpleDictProtocol):
         return hash(self.__id)
 
     def __eq__(self, other: 'Area'):
-        assert(isinstance(other, Area))
+        assert (isinstance(other, Area))
 
         equiv = [
             self.id == other.id,
@@ -239,7 +239,7 @@ class Area(Versioned, SimpleDictProtocol):
         else:
             children_levels = set()
             for child in self.children:
-                assert(child is not self)
+                assert (child is not self)
                 children_levels.add(child.level)
             if len(children_levels) > 1:
                 # Children have different levels. Something is wrong with our tree.
@@ -410,9 +410,9 @@ class Zone(Versioned, SimpleDictProtocol):
         else:
             self.__regions: List[Region] = list(regions)
 
-        assert(isinstance(drivable, bool))
+        assert (isinstance(drivable, bool))
         self.__drivable = drivable
-        assert(isinstance(cost, float))
+        assert (isinstance(cost, float))
         self.__cost = cost
         if isinstance(attr, dict):
             self.__attr = attr
@@ -433,7 +433,7 @@ class Zone(Versioned, SimpleDictProtocol):
         return new
 
     def __eq__(self, other: 'Zone'):
-        assert(isinstance(other, Zone))
+        assert (isinstance(other, Zone))
 
         equiv = [
             self.id == other.id,
