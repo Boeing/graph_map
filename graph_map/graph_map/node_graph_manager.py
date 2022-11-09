@@ -1,3 +1,5 @@
+# type: ignore
+
 from __future__ import annotations
 
 from typing import Dict, Optional, Tuple, Union, Sequence, Iterable
@@ -169,7 +171,11 @@ class NodeGraphManager(NxGraphManager):
         else:
             end_node = end
 
-        if self.prev_path_graph is not None and self.prev_path is not None and start_node in self.prev_path_graph and end_node in self.prev_path:
+        if self.prev_path_graph is not None and \
+                self.prev_path is not None and \
+                start_node in self.prev_path_graph and \
+                end_node in self.prev_path:
+
             if end_node == self.prev_end_node:
                 shortest_path = self.prev_path
 
