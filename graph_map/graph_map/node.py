@@ -25,7 +25,13 @@ class Node(Versioned, SimpleDictProtocol):
 
     CLASS_ATTRIB_MAP = {'version': 'version'}
 
-    def __init__(self, id: str, x: float, y: float, theta: float = 0.0, display_name: Optional[str] = None, attr: Optional[dict] = None):
+    def __init__(self,
+                 id: str,
+                 x: float,
+                 y: float,
+                 theta: float = 0.0,
+                 display_name: Optional[str] = None,
+                 attr: Optional[dict] = None):
         self.__x: float = x
         self.__y: float = y
         self.__theta: float = theta
