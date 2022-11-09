@@ -40,11 +40,11 @@ class Color(SimpleDictProtocol):
         assert(isinstance(o, Color))
 
         equiv = [
-                    self.r == o.r,
-                    self.g == o.g,
-                    self.b == o.b,
-                    self.a == o.a
-                ]
+            self.r == o.r,
+            self.g == o.g,
+            self.b == o.b,
+            self.a == o.a
+        ]
 
         return all(equiv)
 
@@ -165,10 +165,10 @@ class Area(Versioned, SimpleDictProtocol):
         assert(isinstance(other, Area))
 
         equiv = [
-                    self.id == other.id,
-                    self.display_name == other.display_name,
-                    self.regions == other.regions
-                ]
+            self.id == other.id,
+            self.display_name == other.display_name,
+            self.regions == other.regions
+        ]
 
         return all(equiv)
 
@@ -436,13 +436,13 @@ class Zone(Versioned, SimpleDictProtocol):
         assert(isinstance(other, Zone))
 
         equiv = [
-                    self.id == other.id,
-                    self.display_name == other.display_name,
-                    self.regions == other.regions,
-                    self.drivable == other.drivable,
-                    self.cost == other.cost,
-                    self.attr == other.attr
-                ]
+            self.id == other.id,
+            self.display_name == other.display_name,
+            self.regions == other.regions,
+            self.drivable == other.drivable,
+            self.cost == other.cost,
+            self.attr == other.attr
+        ]
 
         return all(equiv)
 
