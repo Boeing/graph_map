@@ -21,6 +21,14 @@ EDGE_ID_NODE = Tuple[Node, Node]
 logger = logging.getLogger(__name__)
 
 
+def _dirty(func):
+    def wrapper(self, *args, **kwargs):
+        self.__clear_cache()
+        return func(self, *args, **kwargs)
+
+    return wrapper
+
+
 class NodeGraphManager(NxGraphManager):
     # These keys are reserved for storing member data of the classes when they get converted into JSON
     EDGE_DATA_KEY = '_edge_data'
@@ -40,13 +48,6 @@ class NodeGraphManager(NxGraphManager):
         self.__node_ids: Optional[Dict[str, Node]] = None
 
         self.__area_manager = None
-
-    def _dirty(func):
-        def wrapper(self, *args, **kwargs):
-            self.__clear_cache()
-            return func(self, *args, **kwargs)
-
-        return wrapper
 
     def clear(self):
         self.graph.clear()
@@ -73,7 +74,8 @@ class NodeGraphManager(NxGraphManager):
                 else:
                     self.add_node(*node)  # Unpack (node, attr)
             except DuplicateNodeError:
-                duplicates.append(node.id)
+                if isinstance(node, Node):
+                    duplicates.append(node.id)
 
         if duplicates:
             raise DuplicateNodeError('Duplicate Nodes found: {}'.format(duplicates))
@@ -167,7 +169,7 @@ class NodeGraphManager(NxGraphManager):
         else:
             end_node = end
 
-        if self.prev_path_graph is not None and start_node in self.prev_path_graph and end_node in self.prev_path:
+        if self.prev_path_graph is not None and self.prev_path is not None and start_node in self.prev_path_graph and end_node in self.prev_path:
             if end_node == self.prev_end_node:
                 shortest_path = self.prev_path
 
@@ -222,7 +224,7 @@ class NodeGraphManager(NxGraphManager):
             nodes = area_nodes
 
         dists = self.__distances(pose, nodes)
-        closest_node = min(dists, key=dists.get)
+        closest_node = min(dists, key=lambda k: dists[k])
         return closest_node, dists[closest_node]
 
     def closest_node_in_list(self, pose: PoseLike, node_list, check_area=True) -> Tuple[Node, float]:
@@ -236,7 +238,7 @@ class NodeGraphManager(NxGraphManager):
 
         if in_area_nodes:
             dists = {node: node.dist(pose) for node in in_area_nodes}
-            k = min(dists, key=dists.get)
+            k = min(dists, key=lambda k: dists[k])
             return k, dists[k]
         else:
             raise ValueError('No nodes in the area "{}"'.format(closest_area.display_name))

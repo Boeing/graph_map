@@ -95,8 +95,8 @@ class SimpleDictProtocol(Protocol):
     def to_simple_dict(self):
         raise NotImplementedError
 
-    @abstractmethod
-    def from_dict(self, attrib_dict: Dict):
+    @staticmethod
+    def from_dict(attrib_dict: Dict):
         raise NotImplementedError
 
 
@@ -131,5 +131,5 @@ def draw_area_graph(graph: nx.Graph, show: bool = True):
 
 def closest_node_in_subgraph(pose: PoseLike, graph: nx.Graph):
     dists = {node: node.dist(pose) for node in graph.nodes}
-    k = min(dists, key=dists.get)
+    k = min(dists, key=lambda k: dists[k])
     return k, dists[k]

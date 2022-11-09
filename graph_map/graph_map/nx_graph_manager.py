@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Type
 
 import networkx as nx
 from abc import abstractmethod
@@ -9,7 +9,7 @@ from graph_map.util import SimpleDictProtocol, NxGraphManagerNode
 
 class NxGraphManager:
     @abstractmethod
-    def get_nodes(self) -> NxGraphManagerNode:
+    def get_nodes(self) -> Dict[NxGraphManagerNode, None]:
         raise NotImplementedError
 
     @abstractmethod
@@ -74,7 +74,7 @@ class NxGraphManager:
         return gm
 
     @classmethod
-    def _from_jsons(cls, json_str: str, node_key: str, node_type: SimpleDictProtocol):
+    def _from_jsons(cls, json_str: str, node_key: str, node_type: Type[SimpleDictProtocol]):
         """
         Reads a networkX graph saved using json_graph.adjacency_data as a json string
         :param json_str: JSON string of the graph

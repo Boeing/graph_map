@@ -25,7 +25,7 @@ class Node(Versioned, SimpleDictProtocol):
 
     CLASS_ATTRIB_MAP = {'version': 'version'}
 
-    def __init__(self, id: str, x: float, y: float, theta: float = 0.0, display_name: str = None, attr: dict = None):
+    def __init__(self, id: str, x: float, y: float, theta: float = 0.0, display_name: Optional[str] = None, attr: Optional[dict] = None):
         self.__x: float = x
         self.__y: float = y
         self.__theta: float = theta
@@ -188,7 +188,7 @@ class Node(Versioned, SimpleDictProtocol):
     def __hash__(self):
         return hash(self.__id)
 
-    def __eq__(self, other: Node):
+    def __eq__(self, other):
         equiv = [self.__x == other.__x,
                  self.__y == other.__y,
                  self.__theta == other.__theta,

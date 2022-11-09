@@ -69,12 +69,10 @@ class Region(SimpleDictProtocol):
     @classmethod
     def from_msg(cls, msg: RegionMsg):
         # Manually set all the required attributes
-        new: Region = cls.__new__(cls)
-        new.__init__(
+        return cls(
             points=[(p.x, p.y) for p in msg.polygon.points],
             color=Color(r=msg.color.r, g=msg.color.g, b=msg.color.b, a=msg.color.a)
         )
-        return new
 
     @property
     def points(self) -> List[Tuple[float, float]]:
@@ -98,7 +96,7 @@ class Region(SimpleDictProtocol):
     def __repr__(self) -> str:
         return repr(self.points)
 
-    def __eq__(self, o: object) -> bool:
+    def __eq__(self, o) -> bool:
         return self.points == o.points and self.color == o.color
 
     def to_simple_dict(self):
@@ -139,7 +137,7 @@ class Area(Versioned, SimpleDictProtocol):
 
     CLASS_ATTRIB_MAP = {'version': 'version'}
 
-    def __init__(self, id: str, regions: Iterable[Region] = None, display_name: Optional[str] = None):
+    def __init__(self, id: str, regions: Optional[Iterable[Region]] = None, display_name: Optional[str] = None):
         """
         Abstraction of an area, provides convenient access to pose membership.
         :param name: Unique name of the area or ID
@@ -149,10 +147,7 @@ class Area(Versioned, SimpleDictProtocol):
         """
         self.__id: str = id
         self.__display_name: Optional[str] = display_name
-        if regions is None:
-            self.__regions = list()
-        else:
-            self.__regions: List[Region] = list(regions)
+        self.__regions = list() if regions is None else list(regions)
 
         # Used after init
         self.__tree: Optional[nx.DiGraph] = None
@@ -161,7 +156,7 @@ class Area(Versioned, SimpleDictProtocol):
     def __hash__(self):
         return hash(self.__id)
 
-    def __eq__(self, other: 'Area'):
+    def __eq__(self, other):
         assert (isinstance(other, Area))
 
         equiv = [
@@ -268,9 +263,10 @@ class Area(Versioned, SimpleDictProtocol):
             return self
 
         generations = max(1, generations)
-        current_area: 'Area' = self
+        current_area: Optional['Area'] = self
         for i in range(generations):
-            current_area = next(current_area.tree.predecessors(current_area), None)
+            if current_area is not None:
+                current_area = next(current_area.tree.predecessors(current_area), None)
 
         return current_area
 
@@ -391,7 +387,7 @@ class Zone(Versioned, SimpleDictProtocol):
 
     def __init__(self,
                  id: str,
-                 regions: Iterable[Region] = None,
+                 regions: Optional[Iterable[Region]] = None,
                  display_name: Optional[str] = None,
                  drivable: bool = True,
                  cost: float = 0.0,
@@ -405,10 +401,7 @@ class Zone(Versioned, SimpleDictProtocol):
         """
         self.__id: str = id
         self.__display_name: Optional[str] = display_name
-        if regions is None:
-            self.__regions = list()
-        else:
-            self.__regions: List[Region] = list(regions)
+        self.__regions = list() if regions is None else list(regions)
 
         assert (isinstance(drivable, bool))
         self.__drivable = drivable
@@ -423,16 +416,14 @@ class Zone(Versioned, SimpleDictProtocol):
     def from_msg(cls, msg: ZoneMsg):
         attr = json.loads(msg.attr)
 
-        new: Zone = cls.__new__(cls)
-        new.__init__(id=msg.id,
-                     regions=[Region.from_msg(region) for region in msg.regions],
-                     display_name=msg.display_name,
-                     drivable=msg.drivable,
-                     cost=msg.cost,
-                     attr=attr)
-        return new
+        return cls(id=msg.id,
+                   regions=[Region.from_msg(region) for region in msg.regions],
+                   display_name=msg.display_name,
+                   drivable=msg.drivable,
+                   cost=msg.cost,
+                   attr=attr)
 
-    def __eq__(self, other: 'Zone'):
+    def __eq__(self, other):
         assert (isinstance(other, Zone))
 
         equiv = [
@@ -535,9 +526,9 @@ class Zone(Versioned, SimpleDictProtocol):
         """
         return self.__regions
 
-    @property
-    def behaviour(self) -> str:
-        return self.__behaviour
+    # @property
+    # def behaviour(self) -> str:
+    #     return self.__behaviour
 
     @property
     def drivable(self) -> bool:
