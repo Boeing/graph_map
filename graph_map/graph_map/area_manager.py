@@ -10,24 +10,6 @@ import networkx as nx
 logger = logging.getLogger(__name__)
 
 
-def _dirty(func):
-    def wrapper(self: 'AreaManager', *args, **kwargs):
-        self.__clear_cache()
-        return func(self, *args, **kwargs)
-
-    return wrapper
-
-
-def _validate_tree(func):
-    def wrapper(self, *args, **kwargs):
-        result = func(self, *args, **kwargs)
-        if not nx.is_forest(self.tree):
-            raise NotATreeAreaError
-        return result
-
-    return wrapper
-
-
 class AreaManager(NxGraphManager):
     NODE_KEY = '_area'
 
@@ -38,6 +20,22 @@ class AreaManager(NxGraphManager):
         # cached data
         self.__areas: Optional[Dict[Area, Dict]] = None
         self.__area_ids: Optional[Dict[str, Area]] = None
+
+    def _dirty(func):
+        def wrapper(self: 'AreaManager', *args, **kwargs):
+            self.__clear_cache()
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    def _validate_tree(func):
+        def wrapper(self, *args, **kwargs):
+            result = func(self, *args, **kwargs)
+            if not nx.is_forest(self.tree):
+                raise NotATreeAreaError
+            return result
+
+        return wrapper
 
     @_dirty
     @_validate_tree
