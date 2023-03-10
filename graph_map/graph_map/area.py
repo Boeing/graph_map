@@ -5,6 +5,7 @@ from typing import Dict, Final, Iterable, List, Optional, Tuple
 import matplotlib.pyplot as plt
 import networkx as nx
 from geometry_msgs.msg import Polygon as PolygonMsg
+from geometry_msgs.msg import Point32
 from graph_map.graph_exceptions import (AreaError, InconsistentTreeAreaError,
                                         UnknownAreaError)
 from graph_map.msg import Region as RegionMsg
@@ -115,7 +116,7 @@ class Region(SimpleDictProtocol):
 
     def to_msg(self):
         return RegionMsg(
-            polygon=PolygonMsg(points=[Point(point[0], point[1], 0) for point in self.points]),
+            polygon=PolygonMsg(points=[Point32(x=float(point[0]), y=float(point[1]), z=0.0) for point in self.points]),
             color=ColorRGBA(r=self.color.r, g=self.color.g, b=self.color.b, a=self.color.a)
         )
 
