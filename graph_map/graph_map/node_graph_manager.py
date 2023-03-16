@@ -23,14 +23,6 @@ EDGE_ID_NODE = Tuple[Node, Node]
 logger = logging.getLogger(__name__)
 
 
-def _dirty(func):
-    def wrapper(self, *args, **kwargs):
-        self.__clear_cache()
-        return func(self, *args, **kwargs)
-
-    return wrapper
-
-
 class NodeGraphManager(NxGraphManager):
     # These keys are reserved for storing member data of the classes when they get converted into JSON
     EDGE_DATA_KEY = '_edge_data'
@@ -50,6 +42,13 @@ class NodeGraphManager(NxGraphManager):
         self.__node_ids: Optional[Dict[str, Node]] = None
 
         self.__area_manager = None
+
+    def _dirty(func):
+        def wrapper(self, *args, **kwargs):
+            self.__clear_cache()
+            return func(self, *args, **kwargs)
+
+        return wrapper
 
     def clear(self):
         self.graph.clear()

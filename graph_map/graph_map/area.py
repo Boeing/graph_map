@@ -1,19 +1,22 @@
 import json
 import logging
-import networkx as nx
-import matplotlib.pyplot as plt
-from typing import Dict, Optional, Iterable, List, Tuple, Final
-from shapely.geometry import Point, Polygon
-from geometry_msgs.msg import Polygon as PolygonMsg
+from typing import Dict, Final, Iterable, List, Optional, Tuple
 
-from graph_map.util import SimpleDictProtocol, PoseLike
-from graph_map.graph_exceptions import AreaError, UnknownAreaError, InconsistentTreeAreaError
-from graph_map.util import to_simple, dunder_name, Versioned
-from graph_map.msg import Zone as ZoneMsg
+import matplotlib.pyplot as plt
+import networkx as nx
+from geometry_msgs.msg import Polygon as PolygonMsg
+from geometry_msgs.msg import Point32
+from graph_map.graph_exceptions import (AreaError, InconsistentTreeAreaError,
+                                        UnknownAreaError)
 from graph_map.msg import Region as RegionMsg
+from graph_map.msg import Zone as ZoneMsg
+from graph_map.util import (PoseLike, SimpleDictProtocol, Versioned,
+                            dunder_name, to_simple)
+from shapely.geometry import Point, Polygon
+from std_msgs.msg import ColorRGBA
+
 # from graph_map.node import Node
 
-from std_msgs.msg import ColorRGBA
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +57,9 @@ class Region(SimpleDictProtocol):
     ATTRIB_MAP = {'points': 'points',
                   'color': dunder_name('color', __class_name)}
 
-    def __init__(self, points: Iterable[Iterable[float]], color: Color = Color()):
+    def __init__(self, points: Iterable[Iterable[float]], color: Optional[Color] = None):
         self.__polygon = Polygon(points).simplify(1e-4)  # simplify can fix some issues like duplicate points
-        self.__color = color
+        self.__color = color or Color()
 
     @classmethod
     def from_dict(cls, attrib_dict):
@@ -69,10 +72,12 @@ class Region(SimpleDictProtocol):
     @classmethod
     def from_msg(cls, msg: RegionMsg):
         # Manually set all the required attributes
-        return cls(
+        new: Region = cls.__new__(cls)
+        new.__init__(
             points=[(p.x, p.y) for p in msg.polygon.points],
             color=Color(r=msg.color.r, g=msg.color.g, b=msg.color.b, a=msg.color.a)
         )
+        return new
 
     @property
     def points(self) -> List[Tuple[float, float]]:
@@ -96,7 +101,7 @@ class Region(SimpleDictProtocol):
     def __repr__(self) -> str:
         return repr(self.points)
 
-    def __eq__(self, o) -> bool:
+    def __eq__(self, o: object) -> bool:
         return self.points == o.points and self.color == o.color
 
     def to_simple_dict(self):
@@ -111,7 +116,7 @@ class Region(SimpleDictProtocol):
 
     def to_msg(self):
         return RegionMsg(
-            polygon=PolygonMsg(points=[Point(point[0], point[1], 0) for point in self.points]),
+            polygon=PolygonMsg(points=[Point32(x=float(point[0]), y=float(point[1]), z=0.0) for point in self.points]),
             color=ColorRGBA(r=self.color.r, g=self.color.g, b=self.color.b, a=self.color.a)
         )
 
@@ -137,7 +142,7 @@ class Area(Versioned, SimpleDictProtocol):
 
     CLASS_ATTRIB_MAP = {'version': 'version'}
 
-    def __init__(self, id: str, regions: Optional[Iterable[Region]] = None, display_name: Optional[str] = None):
+    def __init__(self, id: str, regions: Iterable[Region] = None, display_name: Optional[str] = None):
         """
         Abstraction of an area, provides convenient access to pose membership.
         :param name: Unique name of the area or ID
@@ -147,7 +152,10 @@ class Area(Versioned, SimpleDictProtocol):
         """
         self.__id: str = id
         self.__display_name: Optional[str] = display_name
-        self.__regions = list() if regions is None else list(regions)
+        if regions is None:
+            self.__regions = list()
+        else:
+            self.__regions: List[Region] = list(regions)
 
         # Used after init
         self.__tree: Optional[nx.DiGraph] = None
@@ -156,7 +164,7 @@ class Area(Versioned, SimpleDictProtocol):
     def __hash__(self):
         return hash(self.__id)
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Area'):
         assert (isinstance(other, Area))
 
         equiv = [
@@ -263,10 +271,9 @@ class Area(Versioned, SimpleDictProtocol):
             return self
 
         generations = max(1, generations)
-        current_area: Optional['Area'] = self
-        for i in range(generations):
-            if current_area is not None:
-                current_area = next(current_area.tree.predecessors(current_area), None)
+        current_area: 'Area' = self
+        for _ in range(generations):
+            current_area = next(current_area.tree.predecessors(current_area), None)
 
         return current_area
 
@@ -387,7 +394,7 @@ class Zone(Versioned, SimpleDictProtocol):
 
     def __init__(self,
                  id: str,
-                 regions: Optional[Iterable[Region]] = None,
+                 regions: Iterable[Region] = None,
                  display_name: Optional[str] = None,
                  drivable: bool = True,
                  cost: float = 0.0,
@@ -401,7 +408,10 @@ class Zone(Versioned, SimpleDictProtocol):
         """
         self.__id: str = id
         self.__display_name: Optional[str] = display_name
-        self.__regions = list() if regions is None else list(regions)
+        if regions is None:
+            self.__regions = list()
+        else:
+            self.__regions: List[Region] = list(regions)
 
         assert (isinstance(drivable, bool))
         self.__drivable = drivable
@@ -416,14 +426,16 @@ class Zone(Versioned, SimpleDictProtocol):
     def from_msg(cls, msg: ZoneMsg):
         attr = json.loads(msg.attr)
 
-        return cls(id=msg.id,
-                   regions=[Region.from_msg(region) for region in msg.regions],
-                   display_name=msg.display_name,
-                   drivable=msg.drivable,
-                   cost=msg.cost,
-                   attr=attr)
+        new: Zone = cls.__new__(cls)
+        new.__init__(id=msg.id,
+                     regions=[Region.from_msg(region) for region in msg.regions],
+                     display_name=msg.display_name,
+                     drivable=msg.drivable,
+                     cost=msg.cost,
+                     attr=attr)
+        return new
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Zone'):
         assert (isinstance(other, Zone))
 
         equiv = [
@@ -526,9 +538,9 @@ class Zone(Versioned, SimpleDictProtocol):
         """
         return self.__regions
 
-    # @property
-    # def behaviour(self) -> str:
-    #     return self.__behaviour
+    @property
+    def behaviour(self) -> str:
+        return self.__behaviour
 
     @property
     def drivable(self) -> bool:
