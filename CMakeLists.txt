@@ -14,6 +14,6 @@ find_package(std_msgs REQUIRED)
 # find_package(message_runtime REQUIRED)
 
 # Msg packages
-rosidl_generate_interfaces(${PROJECT_NAME}_msg "msg/Region.msg" "msg/Zone.msg" DEPENDENCIES std_msgs geometry_msgs)
+rosidl_generate_interfaces(${PROJECT_NAME} "msg/Region.msg" "msg/Zone.msg" DEPENDENCIES std_msgs geometry_msgs)
 
 ament_package()
